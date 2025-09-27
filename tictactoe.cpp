@@ -11,21 +11,26 @@ int main() {
 
     //Creating the game board.
     char game_board[9] = {'1','2','3','4','5','6','7','8','9'};
+    while (choice != 1 && choice != 2) {
 
-    std::cout << "Hello welcome to my tictactoe game. Created and designed by Ashley!\n\n"
-              << "This game is designed to be played by 2 players or can be played against a bot\n\n"
-              << "Would you like to play against another player or a bot?.\n"
-              << "Enter 1 to play against another player or Enter 2 to play against a bot.\n";
-    
-    std::cin >> choice;
-
-    while (choice < 1 || choice > 2){
-        std::cout << "Invalid input! Please choose again.\n"
+        std::cout << "Would you like to play against another player or a bot?\n"
                   << "Enter 1 to play against another player or Enter 2 to play against a bot.\n";
 
         std::cin >> choice;
-    
+
+        if (!std::cin) {
+
+            std::cout << "Invalid input! Please enter a number.\n";
+            std::cin.clear();
+            std::cin.ignore(1000, '\n'); 
+            choice = 0; 
+
+        } else if (choice != 1 && choice != 2) {
+        std::cout << "Invalid choice! Please enter 1 or 2.\n";
+
+        }
     }
+
     //If the player chooses option 1, they play against someone else.
     if (choice == 1){
 
@@ -66,25 +71,27 @@ int main() {
 
     //If not they play against a bot.
     } else {
-        int diffculty = 0;
-        std::cout << "Please select the bot difficulty to start the game.\n"
-                  << "1.Easy\n"
-                  << "2.Medium\n"
-                  << "3.Hard\n"
-                  << "4.Impossible\n";
+        int difficulty = 0;
+        while (difficulty < 1 || difficulty > 4) {
+            std::cout << "Please select the bot difficulty to start the game.\n"
+                      << "1. Easy\n"
+                      << "2. Medium\n"
+                      << "3. Hard\n"
+                      << "4. Impossible\n";
 
-        std::cin >> diffculty;
+            std::cin >> difficulty;
 
-        while (diffculty < 1 || diffculty > 4){
-        std::cout << "Invalid input! Please choose again between\n"
-                  << "1.Easy\n"
-                  << "2.Medium\n"
-                  << "3.Hard\n"
-                  << "4.Impossible\n";
+            if (!std::cin) {
+                
+                std::cout << "Invalid input! Please enter a number.\n";
+                std::cin.clear();
+                std::cin.ignore(1000, '\n'); 
+                difficulty = 0;
 
-        std::cin >> diffculty;
-    }
-        
+            } else if (difficulty < 1 || difficulty > 4) {
+                std::cout << "Invalid choice! Please enter between 1 and 4.\n";
+            }
+        }
 
     while (true) {
     
@@ -109,7 +116,7 @@ int main() {
             break;
         }
 
-        bot_moves(game_board, player, bot, diffculty);
+        bot_moves(game_board, player, bot, difficulty);
         display_game_board(game_board);
         std::cout << "\n\n\n";
 

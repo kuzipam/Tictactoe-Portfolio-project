@@ -18,12 +18,22 @@ void player_input(char player, char game_board[9]) {
 //Player input function that takes input from the players as single characters 'X' and 'O'
     int choice = 0;
     int index = 0;
+    
+    //Updated the function and other varibles that require user user input to handle invalid inputs with out crashing the program.
     while (true){
     
         std::cout << "\nPlayer '" << player << "' pick where you want to play between 1-9: \n"; 
         std::cin >> choice;
 
-        //This handles any misinputs by the users.
+        if (!std::cin) {
+
+            std::cout << "Invalid input! Please enter a number.\n";
+            std::cin.clear();                
+            std::cin.ignore(1000, '\n');    
+            continue; 
+        }
+
+        //This handles the range of the inputs.
         while (choice < 1 || choice > 9)
         {
             std::cout << "Please choose Between 1-9. Try again\n";
