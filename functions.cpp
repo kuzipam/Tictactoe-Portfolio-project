@@ -1,8 +1,15 @@
 #include<iostream>
 #include<vector>
+#include <string>
+#include <cctype>
+#include <algorithm>
+#include <limits>
+#include <cmath>
 #include <cstdlib>
 #include <ctime>
+#include "iamheaderfile.hpp"
 
+using namespace std;
 
 void display_game_board(char game_board[9]){
     //Displaying the array as tictactoe board using ASCII art  .
@@ -53,10 +60,10 @@ void player_input(char player, char game_board[9]) {
             
         }
     }
-}    
+} 
 
 //Function that checks for a winner or draw at the end of the game.
-char check_winner(char game_board[9]) {
+bool check_winner(char game_board[9]) {
 
     //This checks for Row wins.
     if (game_board[0] == game_board[1] && game_board[1] == game_board[2]) return game_board[0];
@@ -78,6 +85,41 @@ char check_winner(char game_board[9]) {
     for(int i = 0; i < 9; i++){
 
         if(game_board[i] != 'X' && game_board[i] != 'O'){
+            full = false;
+            break; 
+        }
+    }
+    if (full) return 'D';
+
+    //This returns empty so the much can continue if there isnt a winner yet.
+    return ' '; 
+}
+
+//Overloading function to work with the new player class and marks.
+char check_winner(char game_board[9], const Player& p1, Player& p2) {
+    char a = p1.getMark();
+    char b = p2.getMark();
+
+    //This checks for Row wins.
+    if (game_board[0] == game_board[1] && game_board[1] == game_board[2]) return game_board[0];
+    if (game_board[3] == game_board[4] && game_board[4] == game_board[5]) return game_board[3];
+    if (game_board[6] == game_board[7] && game_board[7] == game_board[8]) return game_board[6];
+
+    //This checks for Column wins.
+    if (game_board[0] == game_board[3] && game_board[3] == game_board[6]) return game_board[0];
+    if (game_board[1] == game_board[4] && game_board[4] == game_board[7]) return game_board[1];
+    if (game_board[2] == game_board[5] && game_board[5] == game_board[8]) return game_board[2];
+
+    //This shecks for Diagonal wins.
+    if (game_board[0] == game_board[4] && game_board[4] == game_board[8]) return game_board[0];
+    if (game_board[2] == game_board[4] && game_board[4] == game_board[6]) return game_board[2];
+
+    //This checks for a draw. If there is an empty space the full variable is set to false and the game continues.
+    bool full = true;
+
+    for(int i = 0; i < 9; i++){
+
+        if(game_board[i] != a && game_board[i] != b){
             full = false;
             break; 
         }
@@ -204,3 +246,103 @@ void bot_moves(char game_board[9], char player, char bot, int diff_choice) {
         game_board[move] = bot;
     }
 }
+
+Player::Player(string n, char m)
+    : name(n), mark(m) {}
+
+string Player::getName() const {
+    return name;
+}
+
+char Player::getMark() const {
+    return mark;
+}
+
+void Player::useAbility(char game_board[9]){}
+
+
+Alchemist:: Alchemist(string n, char m) : Player(n, m){};
+
+void Alchemist:: useAbility (char game_board[9]) {
+    int spot1 = 0;
+    int spot2 = 0;
+
+    cout << name << " you are an Alchemist. Please select two different positions to swap (1 - 9). Spot 1: ";
+    cin >> spot1;
+
+    cout << "Spot 2: ";
+    cin >> spot2;
+
+        
+    while(spot1 < 1 || spot1 > 9 || spot2 < 1 || spot2 > 9){
+        cout << " Invalid input! Please try entering two different numbers (1 - 9): ";
+        cin >> spot1;
+        cin >> spot2;
+
+    }
+
+    if(game_board[spot1 - 1] == game_board[spot2 - 1]){
+        cout << "These spots have the same marks. Nothing swapped";
+    }
+        
+    swap(game_board[spot1 - 1], game_board[spot2 - 1]);
+
+}
+
+Paladin::Paladin(string n, char m) : Player(n, m){};
+
+
+bool adjacent(int spot1, int spot2) {
+    
+    int row_spot1 = (spot1 - 1) / 3;
+    int col_spot1 = (spot1 - 1) % 3;
+    int row_spot2   = (spot2 - 1) / 3;
+    int col_spot2   = (spot2- 1) % 3;
+
+
+    return abs(row_spot1- row_spot2) <= 1 && abs(col_spot1 - col_spot2) <= 1;
+}
+
+void Paladin :: useAbility (char game_board[9]){
+    int spot1 = 0;
+    int spot2 = 0;
+
+    cout << name << " you are a paladin. Please select two diffferent positions to move your mark. Move from: ";
+    cin >> spot1;
+
+    while(cin.fail()|| spot1 < 1 || spot1 > 9 || game_board[spot1 - 1] != getMark()){
+         cout << "Invalid input! Please try entering a valid number (1-9): ";
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cin >> spot1;
+    }
+
+    cout<<"Move to: ";
+    cin >> spot2;
+
+    while (cin.fail() || spot2 < 1 || spot2 > 9 || 
+       !adjacent(spot1, spot2) || 
+       (game_board[spot2 - 1] != '1' && game_board[spot2 - 1] != '2' &&
+        game_board[spot2 - 1] != '3' && game_board[spot2 - 1] != '4' &&
+        game_board[spot2 - 1] != '5' && game_board[spot2 - 1] != '6' &&
+        game_board[spot2 - 1] != '7' && game_board[spot2 - 1] != '8' &&
+        game_board[spot2 - 1] != '9')) {
+
+        cout << "Invalid input! Please choose an *adjacent empty* cell (1-9): ";
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cin >> spot2;
+
+    }
+
+
+    swap(game_board[spot1 -1 ], game_board[spot2 - 1]);
+
+}
+
+
+
+
+
+
+
