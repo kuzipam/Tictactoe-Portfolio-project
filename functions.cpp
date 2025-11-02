@@ -12,7 +12,7 @@
 using namespace std;
 
 void display_game_board(char game_board[9]){
-    //Displaying the array as tictactoe board using ASCII art  .
+    //Displaying the array as tictactoe board using ASCII art.
     std::cout << game_board[0] << "   |  " << game_board[1] << " |  " << game_board[2] << '\n'
               << "----+----+----\n"
               << game_board[3] << "   |  " << game_board[4] << " |  " << game_board[5] << '\n'
@@ -23,6 +23,7 @@ void display_game_board(char game_board[9]){
 
 void player_input(char player, char game_board[9]) {
 //Player input function that takes input from the players as single characters 'X' and 'O'
+    char input;
     int choice = 0;
     int index = 0;
     
@@ -30,35 +31,35 @@ void player_input(char player, char game_board[9]) {
     while (true){
     
         std::cout << "\nPlayer '" << player << "' pick where you want to play between 1-9: \n"; 
-        std::cin >> choice;
+        std::cin >> input;
+        std::cin.ignore(1000, '\n'); 
 
-        if (!std::cin) {
-
-            std::cout << "Invalid input! Please enter a number.\n";
-            std::cin.clear();                
-            std::cin.ignore(1000, '\n');    
-            continue; 
+        //Checking if the input is a digit.
+        if (!isdigit(input)){
+            cout << "Invalid input! Please enter a number.";
+            continue;
         }
+        //Storing the difference of the input and '0' as an integer.
+        choice = input - '0';
 
         //This handles the range of the inputs.
         while (choice < 1 || choice > 9)
         {
-            std::cout << "Please choose Between 1-9. Try again\n";
+            std::cout << "Please choose Between 1-9. Try again\n";   
             std::cin >> choice;
+            continue;
         }
 
         index = choice - 1;
 
-        //Checking if the choose spot is occupied.
-        if (game_board[index] != 'X' && game_board[index] != 'O'){ 
-
+        //Changed the player input function to work with different marks instead of being hardcoded to work with only X and O.
+        if (isdigit(game_board[index])) {
             game_board[index] = player;
             break;
-            
         } else {
-            std::cout << "Invalid play.\n";
-            
+            std::cout << "That spot is already taken. Try again.\n";
         }
+
     }
 } 
 
@@ -263,31 +264,47 @@ void Player::useAbility(char game_board[9]){}
 
 Alchemist:: Alchemist(string n, char m) : Player(n, m){};
 
-void Alchemist:: useAbility (char game_board[9]) {
+void Alchemist::useAbility(char game_board[9]) {
+    int marks = 0;
+
+    //Count all of the player's marks on the board.
+    for (int i = 0; i < 9; i++) {
+        if (game_board[i] == getMark()) {
+            marks++;
+        }
+    }
+
+    //Checks for at least two marks
+    if (marks < 2) {
+        std::cout << name << ", you need at least 2 of your marks on the game board to use your special ability.\n";
+        std::cout << "Make a regular move instead.\n";
+        player_input(getMark(), game_board);  
+        return;
+    }
+
     int spot1 = 0;
     int spot2 = 0;
 
-    cout << name << " you are an Alchemist. Please select two different positions to swap (1 - 9). Spot 1: ";
-    cin >> spot1;
+    std::cout << name << ", you are an Alchemist. Please select two different positions to swap (1-9).\n";
+    std::cout << "Spot 1: ";
+    std::cin >> spot1;
+    std::cout << "Spot 2: ";
+    std::cin >> spot2;
 
-    cout << "Spot 2: ";
-    cin >> spot2;
-
-        
-    while(spot1 < 1 || spot1 > 9 || spot2 < 1 || spot2 > 9){
-        cout << " Invalid input! Please try entering two different numbers (1 - 9): ";
-        cin >> spot1;
-        cin >> spot2;
-
+    while (spot1 < 1 || spot1 > 9 || spot2 < 1 || spot2 > 9) {
+        std::cout << "Invalid input! Please try entering two different numbers (1-9): ";
+        std::cin >> spot1 >> spot2;
     }
 
-    if(game_board[spot1 - 1] == game_board[spot2 - 1]){
-        cout << "These spots have the same marks. Nothing swapped";
+    if (game_board[spot1 - 1] == game_board[spot2 - 1]) {
+        std::cout << "These spots have the same marks. Nothing swapped.\n";
+        return;
     }
-        
-    swap(game_board[spot1 - 1], game_board[spot2 - 1]);
 
+    std::swap(game_board[spot1 - 1], game_board[spot2 - 1]);
+    std::cout << "Swap complete!\n";
 }
+
 
 Paladin::Paladin(string n, char m) : Player(n, m){};
 
@@ -299,50 +316,51 @@ bool adjacent(int spot1, int spot2) {
     int row_spot2   = (spot2 - 1) / 3;
     int col_spot2   = (spot2- 1) % 3;
 
-
     return abs(row_spot1- row_spot2) <= 1 && abs(col_spot1 - col_spot2) <= 1;
 }
 
-void Paladin :: useAbility (char game_board[9]){
+void Paladin::useAbility(char game_board[9]) {
+    bool hasMark = false;
+
+    //Check if the player has at least one mark
+    for (int i = 0; i < 9; i++) {
+        if (game_board[i] == getMark()) {
+            hasMark = true;
+            break;
+        }
+    }
+
+    if (!hasMark) {
+        std::cout << name << ", you need at least 1 mark on the game board to use your special ability.\n";
+        std::cout << "Make a regular move instead.\n";
+        player_input(getMark(), game_board); 
+        return;
+    }
+
     int spot1 = 0;
     int spot2 = 0;
 
-    cout << name << " you are a paladin. Please select two diffferent positions to move your mark. Move from: ";
-    cin >> spot1;
+    std::cout << name << ", you are a Paladin. Move one of your marks to an adjacent empty spot.\n";
+    std::cout << "Move from: ";
+    std::cin >> spot1;
 
-    while(cin.fail()|| spot1 < 1 || spot1 > 9 || game_board[spot1 - 1] != getMark()){
-         cout << "Invalid input! Please try entering a valid number (1-9): ";
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        cin >> spot1;
+    while (std::cin.fail() || spot1 < 1 || spot1 > 9 || game_board[spot1 - 1] != getMark()) {
+        std::cout << "Invalid input! Please try entering a valid number (1-9): ";
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::cin >> spot1;
     }
 
-    cout<<"Move to: ";
-    cin >> spot2;
+    std::cout << "Move to: ";
+    std::cin >> spot2;
 
-    while (cin.fail() || spot2 < 1 || spot2 > 9 || 
-       !adjacent(spot1, spot2) || 
-       (game_board[spot2 - 1] != '1' && game_board[spot2 - 1] != '2' &&
-        game_board[spot2 - 1] != '3' && game_board[spot2 - 1] != '4' &&
-        game_board[spot2 - 1] != '5' && game_board[spot2 - 1] != '6' &&
-        game_board[spot2 - 1] != '7' && game_board[spot2 - 1] != '8' &&
-        game_board[spot2 - 1] != '9')) {
-
-        cout << "Invalid input! Please choose an *adjacent empty* cell (1-9): ";
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        cin >> spot2;
-
+    while (std::cin.fail() || spot2 < 1 || spot2 > 9 ||!adjacent(spot1, spot2) ||game_board[spot2 - 1] == 'X' || game_board[spot2 - 1] == 'O'){
+        std::cout << "Invalid input! Please choose an adjacent empty cell (1-9): ";
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::cin >> spot2;
     }
 
-
-    swap(game_board[spot1 -1 ], game_board[spot2 - 1]);
-
+    std::swap(game_board[spot1 - 1], game_board[spot2 - 1]);
+    std::cout << "Move complete!\n";
 }
-
-
-
-
-
-
-
