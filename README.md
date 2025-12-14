@@ -7,9 +7,9 @@
 - Included input validation for all user inputs using fail, clear, and ignore to prevent crashes or invalid states.
 
 Latest changes:
--Reworked the bot into a class that can be instantiated and reworked its functions to work as class methods.
--Added the ability to replay matches without restarting the entire program.
--Updated the check winner function to work with all custom marks instead of only X and O.
+  -Reworked the bot into a class that can be instantiated and reworked its functions to work as class methods.
+  -Added the ability to replay matches without restarting the entire program.
+  -Updated the check winner function to work with all custom marks instead of only X and O.
 
 
 # 2. Accomplishments
