@@ -63,43 +63,8 @@ void player_input(char player, char game_board[9]) {
     }
 } 
 
-//Function that checks for a winner or draw at the end of the game.
-bool check_winner(char game_board[9]) {
-
-    //This checks for Row wins.
-    if (game_board[0] == game_board[1] && game_board[1] == game_board[2]) return game_board[0];
-    if (game_board[3] == game_board[4] && game_board[4] == game_board[5]) return game_board[3];
-    if (game_board[6] == game_board[7] && game_board[7] == game_board[8]) return game_board[6];
-
-    //This checks for Column wins.
-    if (game_board[0] == game_board[3] && game_board[3] == game_board[6]) return game_board[0];
-    if (game_board[1] == game_board[4] && game_board[4] == game_board[7]) return game_board[1];
-    if (game_board[2] == game_board[5] && game_board[5] == game_board[8]) return game_board[2];
-
-    //This shecks for Diagonal wins.
-    if (game_board[0] == game_board[4] && game_board[4] == game_board[8]) return game_board[0];
-    if (game_board[2] == game_board[4] && game_board[4] == game_board[6]) return game_board[2];
-
-    //This checks for a draw. If there is an empty space the full variable is set to false and the game continues.
-    bool full = true;
-
-    for(int i = 0; i < 9; i++){
-
-        if(game_board[i] != 'X' && game_board[i] != 'O'){
-            full = false;
-            break; 
-        }
-    }
-    if (full) return 'D';
-
-    //This returns empty so the much can continue if there isnt a winner yet.
-    return ' '; 
-}
-
 //Overloading function to work with the new player class and marks.
-char check_winner(char game_board[9], const Player& p1, Player& p2) {
-    char a = p1.getMark();
-    char b = p2.getMark();
+char check_winner(char game_board[9], char p1mark, char p2mark) {
 
     //This checks for Row wins.
     if (game_board[0] == game_board[1] && game_board[1] == game_board[2]) return game_board[0];
@@ -120,7 +85,7 @@ char check_winner(char game_board[9], const Player& p1, Player& p2) {
 
     for(int i = 0; i < 9; i++){
 
-        if(game_board[i] != a && game_board[i] != b){
+        if(game_board[i] != p1mark && game_board[i] != p2mark){
             full = false;
             break; 
         }
@@ -132,17 +97,17 @@ char check_winner(char game_board[9], const Player& p1, Player& p2) {
 }
 
 //This function uses the moves from the Wikipedia link to find the most optimal move on the board that the bot can use.
-int find_optimal_move(char game_board[9], char player, char bot) {
+int Bot::find_optimal_move(char game_board[9], char player, char bot) {
 
     //Using a loop for the bot to go through all the empty spaces to look for a winning move.  
     for (int i = 0; i < 9; i++) {
 
-        if (game_board[i] != 'X' && game_board[i] != 'O') {
+        if (game_board[i] != player && game_board[i] != bot) {
 
             char backup = game_board[i];
             game_board[i] = bot;
 
-            if (check_winner(game_board) == bot) {
+            if (check_winner(game_board, player, bot) == bot) {
                 game_board[i] = backup;
                 return i;
             }
@@ -153,12 +118,12 @@ int find_optimal_move(char game_board[9], char player, char bot) {
     //This does the same as the previous loop but the bot looks for an empty space that will block the player from winning.
     for (int i = 0; i < 9; i++) {
 
-        if (game_board[i] != 'X' && game_board[i] != 'O') {
+        if (game_board[i] != player && game_board[i] != bot) {
 
             char backup = game_board[i];
             game_board[i] = player;
             
-            if (check_winner(game_board) == player) {
+            if (check_winner(game_board, player, bot) == player) {
                 game_board[i] = backup;
                 return i;
             }
@@ -167,42 +132,36 @@ int find_optimal_move(char game_board[9], char player, char bot) {
     }
 
     //The bot takes the centre if its free.
-    if (game_board[4] != 'X' && game_board[4] != 'O') return 4;
+    if (game_board[4] != player && game_board[4] != bot) return 4;
 
     //The bots takes the opposite corner from the player if its free.
-    if (game_board[0] == player && game_board[8] == 'X') return 8;
-    if (game_board[8] == player && game_board[0] == 'X') return 0;
-    if (game_board[2] == player && game_board[6] == 'X') return 6;
-    if (game_board[6] == player && game_board[2] == 'X') return 2;
+    if (game_board[0] == player && game_board[8] == player) return 8;
+    if (game_board[8] == player && game_board[0] == player) return 0;
+    if (game_board[2] == player && game_board[6] == player) return 6;
+    if (game_board[6] == player && game_board[2] == player) return 2;
 
     //The bots takes any corner if its free.
     int corners[4] = {0, 2, 6, 8};
 
-    for (int i = 0; i < 4; i++) {
-
-        if (game_board[corners[i]] != 'X' && game_board[corners[i]] != 'O') return corners[i];
-    }
+    for (int i = 0; i < 4; i++) {if (game_board[corners[i]] != player && game_board[corners[i]] != bot) return corners[i];}
 
     //The bot takes any side spot if its free too.
     int sides[4] = {1, 3, 5, 7};
 
-    for (int i = 0; i < 4; i++) {
-
-        if (game_board[sides[i]] != 'X' && game_board[sides[i]] != 'O') return sides[i];
-    }
+    for (int i = 0; i < 4; i++) {if (game_board[sides[i]] != player && game_board[sides[i]] != bot) return sides[i];}
 
     //The bots doesnt have any moves to make.
     return -1; 
 }
 
 //Picks a random move that is NOT the optimal one
-int random_move(char game_board[9], int optimal) {
+int Bot::random_move(char game_board[9], int optimal, char player, char bot) {
 
     std::vector<int> bot_choices;
 
     for (int i = 0; i < 9; i++) {
 
-        if (game_board[i] != 'X' && game_board[i] != 'O' && i != optimal) {
+        if (game_board[i] != player && game_board[i] != bot && i != optimal) {
             bot_choices.push_back(i);
         }
     }
@@ -216,7 +175,7 @@ int random_move(char game_board[9], int optimal) {
 }
 
 //This is the function that handles the execution of the bot moves.
-void bot_moves(char game_board[9], char player, char bot, int diff_choice) {
+void Bot::bot_moves(char game_board[9], char player, char bot, int diff_choice) {
 
     //Calling the optimal move function to look for the best moves that can be played.
     int optimal = find_optimal_move(game_board, player, bot);
@@ -239,30 +198,58 @@ void bot_moves(char game_board[9], char player, char bot, int diff_choice) {
     if (random_dice < errorChance) {
 
         //Random move function is called if the the bot does make an error.
-        move = random_move(game_board, optimal);
+        move = random_move(game_board, optimal, player, bot);
     }
 
     //The bot makes its move. Since the bot returns -1 in the optimal move function if it doesnt find a move, I used it as a condition to avoid any errors.
-    if (move != -1 && game_board[move] != 'X' && game_board[move] != 'O') {
+    if (move != -1 && game_board[move] != player && game_board[move] != bot) {
         game_board[move] = bot;
     }
 }
 
-Player::Player(string n, char m)
-    : name(n), mark(m) {}
+Player::Player(string n, char m, int hp, int def, int atk)
+    : name(n), mark(m), health(hp), defense(def), attack(atk) {}
 
-string Player::getName() const {
-    return name;
-}
+string Player::getName() const {return name;}
 
-char Player::getMark() const {
-    return mark;
-}
+char Player::getMark() const {return mark;}
+string Player::getplayerclass(){return "Player";}
 
 void Player::useAbility(char game_board[9]){}
 
+int Player::getHealth() const {return health;}
 
-Alchemist:: Alchemist(string n, char m) : Player(n, m){};
+int Player::getAttack() const {return attack;}
+
+int Player::getDefense() const {return defense;}
+
+void Player::takeDamage(int amount) {
+    health -= amount;
+    if (health < 0) {health = 0;}
+}
+
+void Player::heal(int amount) {health += amount;}
+
+void Player::modifyAttack(int delta) {
+    attack += delta;
+    if (attack < 1) {attack = 1;}
+}
+
+void Player::modifyDefense(int delta) {
+    defense += delta;
+    if (defense < 0) {defense = 0;}
+}
+
+
+//Turned my original bot into a class to create instances that are used in the campaign mode.
+Bot::Bot(const string& n, int hp, int atk, int def, char m)
+    : name(n), health(hp), defense(def), attack(atk), mark(m) {}
+    
+void Bot::useAbility(char game_board[9]){}
+
+
+Alchemist:: Alchemist(string n, char m, int hp, int def, int atk) : Player(n, m, hp, def, atk){};
+string Alchemist::getplayerclass(){return "Alchemist";}
 
 void Alchemist::useAbility(char game_board[9]) {
     int marks = 0;
@@ -306,7 +293,8 @@ void Alchemist::useAbility(char game_board[9]) {
 }
 
 
-Paladin::Paladin(string n, char m) : Player(n, m){};
+Paladin::Paladin(string n, char m, int hp, int def, int atk) : Player(n, m, hp, def, atk){};
+string Paladin::getplayerclass(){return "Paladin";}
 
 
 bool adjacent(int spot1, int spot2) {
@@ -363,4 +351,330 @@ void Paladin::useAbility(char game_board[9]) {
 
     std::swap(game_board[spot1 - 1], game_board[spot2 - 1]);
     std::cout << "Move complete!\n";
+}
+
+
+// Helper to calculate damage done after a round.
+int calcDamage(int atk, int def) {
+    int dmg = atk - def;
+    if (dmg < 1) dmg = 1;
+    return dmg;
+}
+
+//Plays a single round of tictactoe.
+char play_round(Player &player, Bot &enemy) {
+    char game_board[9] = {'1','2','3','4','5','6','7','8','9'};
+
+    char playerMark = player.getMark();
+    char enemyMark  = enemy.mark;
+
+    bool playerTurn = true; 
+
+    while (true) {
+        display_game_board(game_board);
+
+        if (playerTurn) {
+            cout << "\n" << player.getName() << "'s turn (" << playerMark << ").\n";
+            player_input(playerMark, game_board);
+        } else {
+            cout << "\n" << enemy.name << " is making a move (" << enemyMark << ")...\n";
+        
+            //Bot is set to medium difficulty by default.
+            int diff_choice = 2;
+            enemy.bot_moves(game_board, playerMark, enemyMark, diff_choice);
+        }
+
+        char winner = check_winner(game_board, playerMark, enemyMark);
+
+        if (winner == playerMark) {
+            display_game_board(game_board);
+            cout << "\n" << player.getName() << " wins this round of tic-tac-toe!\n";
+            return 'P';
+
+        } else if (winner == enemyMark) {
+            display_game_board(game_board);
+            cout << "\n" << enemy.name << " wins this round of tic-tac-toe!\n";
+            return 'E';
+
+        } else if (winner == 'D') {
+            display_game_board(game_board);
+            cout << "\nThis round ends in a draw.\n";
+            return 'D';
+        }
+
+        playerTurn = !playerTurn;
+    }
+}
+
+//Battle functions that plays multiple rounds until either the player or enemy wins.
+void battle(Player &player, Bot &enemy) {
+    cout << "\n====================================\n";
+    cout << "Battle vs " << enemy.name << " begins!\n";
+
+    while (player.getHealth() > 0 && enemy.health > 0) {
+        cout << "\n------------------------------------\n";
+        cout << player.getName() << "  HP: " << player.getHealth()
+             << "  ATK: " << player.getAttack()
+             << "  DEF: " << player.getDefense() << "\n";
+
+        cout << enemy.name << "     HP: " << enemy.health
+             << "  ATK: " << enemy.attack
+             << "  DEF: " << enemy.defense << "\n";
+
+        // Play one tic-tac-toe match
+        char result = play_round(player, enemy);
+
+        if (result == 'P') {
+            int dmg = max(0, player.getAttack() - enemy.defense);
+            enemy.health -= dmg;
+            cout << "\nYou hit " << enemy.name << " for " << dmg << " damage!\n";
+        }
+        else if (result == 'E') {
+            int dmg = max(0, enemy.attack - player.getDefense());
+            player.takeDamage(dmg);
+            cout << "\n" << enemy.name << " hits you for " << dmg << " damage!\n";
+        }
+        else {
+            cout << "\nNo dAmage this round.\n";
+        }
+
+        if (enemy.health <= 0) {
+            cout << "\nYou defeated " << enemy.name << "!\n";
+            break;
+        }
+
+        if (player.getHealth() <= 0) {
+            cout << "\nYou were defeated by " << enemy.name << "...\n";
+            break;
+        }
+    }
+}
+
+void moralChoices(const string& enemyName, int &spared, int &executed) {
+    cout << "\n" << enemyName << " kneels before you, defeated.\n";
+    cout << "What do you do?\n";
+    cout << "1. Spare them\n";
+    cout << "2. Execute them\n";
+    cout << "Choice: ";
+
+    int choice;
+    cin >> choice;
+
+    while (cin.fail() || (choice != 1 && choice != 2)) {
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cout << "Please choose 1 or 2: ";
+        cin >> choice;
+    }
+
+    if (choice == 1) {
+        spared++;
+        cout << "\nYou choose mercy.\n";
+    } else {
+        executed++;
+        cout << "\nYou show no mercy.\n";
+    }
+}
+
+void goodEnding(Player &player) {
+    cout << "\nYou spared those who wronged you, those that took everything and everyone from you.\n";
+    cout << "They stop doing bad and try to repay the people they hurt.\n";
+    cout << "Peace returns through mercy. You finally avenged your family through kindness.\n";
+    cout << "\n =====GOOD ENDING=====\n";
+}
+
+void badEnding(Player &player) {
+    cout << "\nEvery champion lies dead.\n";
+    cout << "The name "<< player.getName() <<" inflicts fear into all.\n";
+    cout << "You became what you swore to destroy.\n";
+    cout << "\n =====BAD ENDING===== \n";
+}
+
+void neutralEnding(Player &player) {
+    cout << "\nSome were spared. Others werent so lucky.\n";
+    cout << "The world heals, but some scars remain.\n";
+    cout << "\n =====NEUTRAL ENDING===== \n";
+}
+
+void campaign(Player* p){
+    Player &player = *p;
+    int spared = 0;
+    int executed = 0;
+    int gold = 0;
+
+
+
+    //Intro story
+    cout << player.getName() << ", you were born in a peaceful village, living with your family.\n";
+    cout << "You lived in harmony with all the other villagers until that peace\n";
+    cout << "was shattered the day the Five champions arrived.\n\n";
+
+    cout << "They slaughtered everyone in your village mercilessly.\n";
+    cout << "Your family was cut down before your eyes and you were left for dead\n";
+    cout << "in your blazing family house.\n";
+    cout << "However, through sheer will power you survived.\n\n";
+
+    cout << "Alone and with no one to go to, you left the barren town you called home,\n";
+    cout << "trying to recover from that traumatic event.\n";
+    cout << "You spent years training, honing your skills and yourself into an unstoppable "
+         << player.getplayerclass()  << ".\n";
+    cout << "You are now prepared to return back to your homeland and avenge your family\n";
+    cout << "by hunting the Five champions that took everything from you.\n\n";
+
+    cout << "Press Enter to begin your journey...";
+    cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    cin.get();
+
+    //Enemy bot setup.
+    char enemyMark = (player.getMark() == 'X') ? 'O' : 'X';
+
+    Bot champ1("Maliketh", 10, 3, 2, enemyMark);
+    Bot champ2("Crucible Knight", 13, 4, 2, enemyMark);
+    Bot champ3("Kratos the God of War", 16, 5, 3, enemyMark);
+    Bot champ4("Hollow Knight", 18, 6, 3, enemyMark);
+    Bot finalBoss("Godfrey the first Elden Lord", 20, 6, 4, enemyMark);
+
+    //First Battle.
+    cout << "\nYour journey begins...\n";
+    battle(player, champ1);
+    if (player.getHealth() <= 0) {
+        cout << "\nYou fall to Maliketh.\nYour story ends here.\n";
+        return;
+    }
+
+    moralChoices(champ1.name, spared, executed);
+
+    //Rewards player with 5 to 10 gold after defeating an enemy
+    int reward = 5 + rand() % 6; 
+    gold += reward;
+    cout << "\nYou found " << reward << " gold. Current gold: " << gold << "\n\n";
+
+    //Event 1 - resting. 
+    cout << "\nAfter defeating the Maliketh, you find a small abandoned camp.\n";
+    cout << "You rest and recover some strength.\n";
+    player.heal(3);
+    cout << "You recovered 3 HP. Current HP: " << player.getHealth() << "\n\n";
+
+    //Second Battle.
+    battle(player, champ2);
+    if (player.getHealth() <= 0) {
+        cout << "\nThe Crucible Knight overwhelms you.\n";
+        return;
+    }
+    moralChoices(champ2.name, spared, executed);
+    reward = 5 + rand() % 6; 
+    gold += reward;
+    cout << "\nYou found " << reward << " gold. Current gold: " << gold << "\n\n";
+
+
+    //Event 2- Merchant.
+    cout << "\nA traveling merchant appears.\n";
+    cout << "Gold: " << gold << "\n";
+    cout << "1) Potion (+3 HP) - 6 gold\n";
+    cout << "2) Sharpen Blade (+3 ATK) - 8 gold\n";
+    cout << "3) Reinforce Armor (+1 DEF) - 8 gold\n";
+    cout << "4) Leave shop\n";
+
+    int shopChoice = 0;
+    while (true) {
+        cout << "Choose 1-4: ";
+        cin >> shopChoice;
+
+        if (cin.fail() || shopChoice < 1 || shopChoice > 4) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid.\n";
+        } else break;
+    }
+
+    if (shopChoice == 1) {
+        if (gold >= 6) {
+            gold -= 6;
+            player.heal(3);
+            cout << "You drink a potion (+3 HP). Gold: " << gold
+                 << " | HP: " << player.getHealth() << "\n\n";
+
+        } else {cout << "Not enough gold.\n\n";}
+
+    }else if (shopChoice == 2) {
+        if (gold >= 8) {
+            gold -= 8;
+            player.modifyAttack(3);
+            cout << "Your weapon is sharpened (+3 ATK). Gold: " << gold
+                 << " | ATK: " << player.getAttack() << "\n\n";
+
+        } else {cout << "Not enough gold.\n\n";}
+
+    } else if (shopChoice == 3) {
+        if (gold >= 8) {
+            gold -= 8;
+            player.modifyDefense(1);
+            cout << "Your armor is reinforced (+1 DEF). Gold: " << gold
+                 << " | DEF: " << player.getDefense() << "\n\n";
+
+        } else {cout << "Not enough gold.\n\n";}
+
+    } else {cout << "You leave the shop.\n\n";}
+
+    cin.clear();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    //Third Battle.
+    battle(player, champ3);
+    if (player.getHealth() <= 0) {
+        cout << "\nKratos the God of War claims your soul.\n";
+        return;
+    }
+    moralChoices(champ3.name, spared, executed);
+    reward = 5 + rand() % 6;
+    gold += reward;
+    cout << "\nYou found " << reward << " gold. Current gold: " << gold << "\n\n";
+
+
+    //Event 3: Buff.
+    cout << "\nYou discover an ancient magical stone statue.\n";
+    cout << "A protective aura surrounds you.\n";
+    player.modifyDefense(1);
+    cout << "DEF increased by 1! Current DEF: " << player.getDefense() << "\n\n";
+
+   
+    //Fourth Battle
+    battle(player, champ4);
+    if (player.getHealth() <= 0) {
+        cout << "\nThe Hollow Knight's curse consumes you.\n";
+        return;
+    }
+    moralChoices(champ4.name, spared, executed);
+    reward = 5 + rand() % 6;
+    gold += reward;
+    cout << "\nYou found " << reward << " gold. Current gold: " << gold << "\n\n";
+
+
+    //Final fight. Boss uses his ability.
+    cout << "\nAs you approach the throne room, a chilling roar shakes the ruins.\n";
+    cout << "Godfrey the first Elden Lord senses your presence and his fury grows.\n";
+    int roll = rand() % 3;
+
+    if (roll == 0) {finalBoss.attack += 3; cout << "Godfrey roars! +3 ATK!\n\n";} 
+    else if (roll == 1) {finalBoss.defense += 2;cout << "Godfrey hardens his stance! +2 DEF!\n\n";}
+    else {player.modifyDefense(-1);cout << "Godfrey shatters your guard! -1 DEF!\n\n";}
+
+
+    battle(player, finalBoss);
+    if (player.getHealth() <= 0) {
+        cout << "\nYou gave everything, but Godfrey the first Elden Lord stands victorious.\n";
+        cout << "Your family's memory fades into dust...\n";
+        return;
+    }
+
+    cout << "\nWith a final strike, you slay Godfrey the first Elden Lord.\n";
+    cout << "The Five Champions who destroyed your village are no more.\n";
+    cout << "Your family's spirits can finally rest in peace.\n";
+    cout << "You, " << player.getName() << " the " << player.getplayerclass()
+        << ", have avenged your family.\n\n";
+
+    if (spared >= 3){goodEnding(player);} 
+    else if (executed >= 3) {badEnding(player);} 
+    else {neutralEnding(player);}
+    
 }
