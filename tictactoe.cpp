@@ -105,7 +105,6 @@ int main() {
 
             //Showing updated game board after a move is made.
             cout << "\n\n";
-            display_game_board(game_board);
 
             //Checking for winner after every valid move is made.
             char winner = check_winner(game_board, player1.getMark(), player2.getMark());
@@ -142,7 +141,6 @@ int main() {
 
     while (toupper(restart) == 'Y') {
 
-        // Fresh board each match (no helper function)
         char game_board[9] = {'1','2','3','4','5','6','7','8','9'};
 
         int difficulty = 0;

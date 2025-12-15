@@ -190,6 +190,7 @@ void Bot::bot_moves(char game_board[9], char player, char bot, int diff_choice) 
         case 2: errorChance = 30; break; //Medium
         case 3: errorChance = 10; break; //Hard
         case 4: errorChance = 0;  break; //Impossible
+        case 5: errorChance = 100; break;//Added this only for the campaign so that the bot make its moves randomly. This forces a 100 percent error chance so that the bot always uses the random move function.
     }
 
     //Using rand to sort of roll a dice to decide if the bot should make an error or not.
@@ -255,15 +256,11 @@ void Alchemist::useAbility(char game_board[9]) {
     int marks = 0;
 
     //Count all of the player's marks on the board.
-    for (int i = 0; i < 9; i++) {
-        if (game_board[i] == getMark()) {
-            marks++;
-        }
-    }
+    for (int i = 0; i < 9; i++) {if (!isdigit(game_board[i])){marks++;}}
 
     //Checks for at least two marks
     if (marks < 2) {
-        std::cout << name << ", you need at least 2 of your marks on the game board to use your special ability.\n";
+        std::cout << name << ", there must to be at least 2 marks on the game board to use your special ability.\n";
         std::cout << "Make a regular move instead.\n";
         player_input(getMark(), game_board);  
         return;
@@ -278,17 +275,28 @@ void Alchemist::useAbility(char game_board[9]) {
     std::cout << "Spot 2: ";
     std::cin >> spot2;
 
-    while (spot1 < 1 || spot1 > 9 || spot2 < 1 || spot2 > 9) {
+    while (spot1 < 1 || spot1 > 9 || spot2 < 1 || spot2 > 9 || spot1 == spot2) {
         std::cout << "Invalid input! Please try entering two different numbers (1-9): ";
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         std::cin >> spot1 >> spot2;
     }
 
-    if (game_board[spot1 - 1] == game_board[spot2 - 1]) {
+    //Had to rework this abiltiy as well to not swap digits and stop swaps with the same marks.
+    int a = spot1 - 1;
+    int b = spot2 - 1;
+
+    if (isdigit(game_board[a]) || isdigit(game_board[b])) {
+        std::cout << "Invalid swap: you can only swap occupied marks (not empty spaces).\n";
+        return;
+    }
+
+    if (game_board[a] == (game_board[b])) {
         std::cout << "These spots have the same marks. Nothing swapped.\n";
         return;
     }
 
-    std::swap(game_board[spot1 - 1], game_board[spot2 - 1]);
+    std::swap(game_board[a], game_board[b]);
     std::cout << "Swap complete!\n";
 }
 
@@ -304,19 +312,15 @@ bool adjacent(int spot1, int spot2) {
     int row_spot2   = (spot2 - 1) / 3;
     int col_spot2   = (spot2- 1) % 3;
 
-    return abs(row_spot1- row_spot2) <= 1 && abs(col_spot1 - col_spot2) <= 1;
+    return (abs(row_spot1 - row_spot2) == 1 && col_spot1 == col_spot2) || (abs(col_spot1 - col_spot2) == 1 && row_spot1 == row_spot2);
+
 }
 
 void Paladin::useAbility(char game_board[9]) {
     bool hasMark = false;
 
     //Check if the player has at least one mark
-    for (int i = 0; i < 9; i++) {
-        if (game_board[i] == getMark()) {
-            hasMark = true;
-            break;
-        }
-    }
+    for (int i = 0; i < 9; i++) {if (!isdigit(game_board[i])) {hasMark = true; break;}}
 
     if (!hasMark) {
         std::cout << name << ", you need at least 1 mark on the game board to use your special ability.\n";
@@ -332,25 +336,31 @@ void Paladin::useAbility(char game_board[9]) {
     std::cout << "Move from: ";
     std::cin >> spot1;
 
-    while (std::cin.fail() || spot1 < 1 || spot1 > 9 || game_board[spot1 - 1] != getMark()) {
-        std::cout << "Invalid input! Please try entering a valid number (1-9): ";
-        std::cin.clear();
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        std::cin >> spot1;
+    while (cin.fail()|| spot1 < 1 || spot1 > 9|| isdigit(game_board[spot1 - 1]) ) {
+        cout << "Invalid input! Pick a square that has a mark (not an empty number 1-9): ";
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cin >> spot1;
     }
+
 
     std::cout << "Move to: ";
     std::cin >> spot2;
 
-    while (std::cin.fail() || spot2 < 1 || spot2 > 9 ||!adjacent(spot1, spot2) ||game_board[spot2 - 1] == 'X' || game_board[spot2 - 1] == 'O'){
-        std::cout << "Invalid input! Please choose an adjacent empty cell (1-9): ";
-        std::cin.clear();
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        std::cin >> spot2;
+   while (cin.fail()|| spot2 < 1 || spot2 > 9|| !adjacent(spot1, spot2)|| !isdigit(game_board[spot2 - 1]) ) {
+        cout << "Invalid input! Choose an adjacent EMPTY square (1-9): ";
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cin >> spot2;
     }
 
-    std::swap(game_board[spot1 - 1], game_board[spot2 - 1]);
-    std::cout << "Move complete!\n";
+    //Updated the ability logic so now the paladin only moves into empyt spaces and the board numbers dont move.
+    int from = spot1 - 1;
+    int to   = spot2 - 1;
+
+    game_board[to] = game_board[from];
+    game_board[from] = (from + 1) + '0'; 
+
 }
 
 
@@ -379,8 +389,8 @@ char play_round(Player &player, Bot &enemy) {
         } else {
             cout << "\n" << enemy.name << " is making a move (" << enemyMark << ")...\n";
         
-            //Bot is set to medium difficulty by default.
-            int diff_choice = 2;
+            //Bot is set to make random moves always.
+            int diff_choice = 5;
             enemy.bot_moves(game_board, playerMark, enemyMark, diff_choice);
         }
 
